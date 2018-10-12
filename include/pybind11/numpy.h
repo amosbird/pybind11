@@ -177,6 +177,8 @@ struct npy_api {
 
     unsigned int (*PyArray_GetNDArrayCFeatureVersion_)();
     PyObject *(*PyArray_DescrFromType_)(int);
+    PyObject* (*PyArray_New_)(PyTypeObject* subtype, int nd, Py_intptr_t* dims, int type_num,
+        Py_intptr_t* strides, void* data, int itemsize, int flags, PyObject* obj);
     PyObject *(*PyArray_NewFromDescr_)
         (PyTypeObject *, PyObject *, int, Py_intptr_t *,
          Py_intptr_t *, void *, int, PyObject *);
@@ -588,6 +590,25 @@ public:
         m_ptr = tmp.release().ptr();
     }
 
+    template <typename T>
+    array(T *ptr, size_t count) {
+        ShapeContainer shape = {{ count }};
+        StridesContainer strides;
+        auto dt = pybind11::dtype::of<T>();
+        *strides = c_strides(*shape, dt.itemsize());
+        auto ndim = shape->size();
+        // NPY_ARRAY_CARRAY_RO 0x0401
+        // NPY_ARRAY_CARRAY 0x0501
+        int flags = 0x0401;
+        auto &api = detail::npy_api::get();
+        auto tmp = reinterpret_steal<object>(api.PyArray_NewFromDescr_(
+            api.PyArray_Type_, dt.release().ptr(), (int) ndim, shape->data(), strides->data(),
+            const_cast<void *>(reinterpret_cast<const void *>(ptr)), flags, nullptr));
+        if (!tmp)
+            throw error_already_set();
+        m_ptr = tmp.release().ptr();
+    }
+
     array(const pybind11::dtype &dt, ShapeContainer shape, const void *ptr = nullptr, handle base = handle())
         : array(dt, std::move(shape), {}, ptr, base) { }
 
@@ -865,6 +886,9 @@ public:
 
     explicit array_t(size_t count, const T *ptr = nullptr, handle base = handle())
         : array({count}, {}, ptr, base) { }
+
+    explicit array_t(const T *ptr, size_t count)
+        : array(ptr, count) { }
 
     constexpr ssize_t itemsize() const {
         return sizeof(T);
