@@ -597,9 +597,9 @@ public:
         auto dt = pybind11::dtype::of<T>();
         *strides = c_strides(*shape, dt.itemsize());
         auto ndim = shape->size();
-        // NPY_ARRAY_CARRAY_RO 0x0401
+        // NPY_ARRAY_CARRAY_RO 0x0101
         // NPY_ARRAY_CARRAY 0x0501
-        int flags = 0x0401;
+        int flags = 0x0101;
         auto &api = detail::npy_api::get();
         auto tmp = reinterpret_steal<object>(api.PyArray_NewFromDescr_(
             api.PyArray_Type_, dt.release().ptr(), (int) ndim, shape->data(), strides->data(),

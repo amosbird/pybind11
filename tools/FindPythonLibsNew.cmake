@@ -192,7 +192,6 @@ MARK_AS_ADVANCED(
 # library. We now set the variables listed by the documentation for this
 # module.
 SET(PYTHON_INCLUDE_DIRS "${PYTHON_INCLUDE_DIR}")
-SET(PYTHON_LIBRARY "${CMAKE_SOURCE_DIR}/miniconda3/lib/libpython3.7m.so")
 SET(PYTHON_LIBRARIES "${PYTHON_LIBRARY}")
 SET(PYTHON_DEBUG_LIBRARIES "${PYTHON_DEBUG_LIBRARY}")
 
